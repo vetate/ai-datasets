@@ -110,3 +110,51 @@ df_filtered = df_aitools_clean.filter(~col("Major Category").like("%https://%"))
 df_filtered.groupBy("Major Category", "is_free").count().orderBy(desc("Major Category")).display()
 
 
+
+# COMMAND ----------
+
+# Assuming aisurvey is your DataFrame
+
+# Define a function to generate new column names
+def rename_column(col_name):
+  # Customize the logic here (e.g., lowercase, replace special characters, shorten)
+  new_name = col_name.lower().replace(" ", "_")  # Lowercase and replace spaces with underscores
+  return new_name[:31]  # Truncate to avoid exceeding Spark column name length limit (31 chars)
+
+# Rename all columns using a loop and withColumnRenamed
+new_col_names = [rename_column(col_name) for col_name in aisurvey.columns]
+aisurvey_clean = aisurvey.toDF(*new_col_names)  # Create a new DataFrame with renamed columns
+
+# Display the DataFrame with renamed columns
+aisurvey_clean.show()
+
+
+
+# COMMAND ----------
+
+
+
+# Define a list of desired new column names (replace with your actual names)
+new_col_names = [
+  "user_role",  # Replace with new name for first column
+  "education",  # Replace with new name for second column
+  "years_at_uni",  # Replace with new name for third column
+  "gender",  # You can keep some names the same
+  "age",  # You can keep some names the same
+  "annual_income_usd"  # Replace with new name for last column
+]
+
+# Create a dictionary of column names
+column_names_dict = dict(zip(aisurvey.columns, new_col_names))
+
+# Rename all columns using withColumnRenamed and a for loop
+aisurvey_clean = aisurvey
+for old_name, new_name in column_names_dict.items():
+    aisurvey_clean = aisurvey_clean.withColumnRenamed(old_name, new_name)
+
+# Display the DataFrame with renamed columns
+aisurvey_clean.show()
+
+# COMMAND ----------
+
+aisurvey.write.option("header",'true').csv("/mnt/ai-data/transformed-data/aisurvey")
